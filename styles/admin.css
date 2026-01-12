@@ -1,0 +1,119 @@
+/* 
+   LUMEN ADMIN THEME - "OPERATOR ZERO" 
+   Aesthetic: DMC5 / High-Tech / Cyberpunk
+   Scope: Restricted to .admin-container
+*/
+
+.admin-container {
+    --admin-accent: #00d2ff;
+    --admin-danger: #ff0055;
+    --admin-bg: #050505;
+    --admin-panel: rgba(10, 10, 10, 0.95);
+    font-family: 'Space Grotesk', sans-serif;
+}
+
+/* Background Texture for Admin Only */
+.admin-container::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("https://grainy-gradients.vercel.app/noise.svg");
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Typography Overrides */
+.admin-container .dmc-title {
+    font-family: 'Cinzel', serif !important;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 900;
+    text-shadow: 0 0 20px rgba(0, 210, 255, 0.5);
+}
+
+.admin-container .font-mono {
+    font-family: 'Fira Code', 'Courier New', monospace !important;
+}
+
+/* Buttons & Interactive Elements */
+.admin-container .dmc-btn {
+    position: relative;
+    clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+    transition: all 0.2s ease-out;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #a1a1aa;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.admin-container .dmc-btn:hover {
+    transform: translateX(5px) scale(1.02);
+    background: var(--admin-accent);
+    color: #000 !important;
+    border-color: var(--admin-accent);
+    text-shadow: none;
+    box-shadow: 0 0 25px rgba(0, 210, 255, 0.4);
+}
+
+/* Special Rank Text */
+.admin-container .rank-sss {
+    background: linear-gradient(to bottom, #fff 0%, var(--admin-accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 30px rgba(0, 210, 255, 0.6);
+    font-style: italic;
+    font-family: 'Cinzel', serif;
+}
+
+/* Inputs */
+.admin-container input, 
+.admin-container select, 
+.admin-container textarea {
+    background-color: #000 !important;
+    border: 1px solid #333;
+    color: #fff !important;
+    font-family: 'Fira Code', monospace;
+}
+
+.admin-container input:focus, 
+.admin-container select:focus, 
+.admin-container textarea:focus {
+    border-color: var(--admin-accent);
+    box-shadow: 0 0 15px rgba(0, 210, 255, 0.2);
+}
+
+/* Sidebar Specifics for Admin */
+.admin-container aside {
+    background: #000 !important;
+    border-right: 1px solid rgba(0, 210, 255, 0.2);
+}
+
+.admin-container aside button:hover {
+    background: rgba(0, 210, 255, 0.1);
+    color: var(--admin-accent);
+    border-color: var(--admin-accent);
+}
+
+/* Cards & Panels */
+.admin-container .glass-panel,
+.admin-container .card {
+    background: #080808 !important;
+    border: 1px solid #222;
+    border-radius: 0 !important; /* Sharp edges for admin */
+}
+
+/* Scrollbar override for Admin */
+.admin-container ::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 0;
+}
+.admin-container ::-webkit-scrollbar-thumb:hover {
+    background: var(--admin-accent);
+}

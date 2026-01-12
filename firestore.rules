@@ -1,0 +1,208 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =================================================================================
+    // 🛡️ KERNEL DE SEGURANÇA (ZERO TRUST)
+    // =================================================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isUser(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    // Helper seguro para obter dados do usuário
+    function getUserRole() {
+      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid));
+      return (userDoc != null && userDoc.data != null && 'role' in userDoc.data) 
+             ? userDoc.data.role 
+             : null;
+    }
+
+    function isTeacher() {
+      return isAuthenticated() && getUserRole() == 'professor';
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && getUserRole() == 'admin';
+    }
+    
+    // Verifica se campos sensíveis NÃO estão sendo alterados no payload
+    function notUpdating(field) {
+      return !(field in request.resource.data) || resource.data[field] == request.resource.data[field];
+    }
+
+    // Validação de XP: Previne "Farm" de XP via console
+    function isValidXpIncrement() {
+      // Cooldown de 3 segundos entre updates de XP
+      let isCooldownOver = resource.data.updatedAt == null || 
+                           request.time > resource.data.updatedAt + duration.value(3, 's');
+      
+      // O XP novo deve ser maior ou igual ao antigo (não pode perder XP)                     
+      // O ganho máximo por transação é 100 (evita que o aluno se dê 1 milhão de XP)
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['xp', 'stats', 'unlocked', 'updatedAt', 'level']) &&
+             request.resource.data.xp >= resource.data.xp &&
+             (request.resource.data.xp - resource.data.xp) <= 100 &&
+             isCooldownOver;
+    }
+
+    // =================================================================================
+    // 👤 USUÁRIOS
+    // =================================================================================
+
+    match /users/{userId} {
+      allow read: if isUser(userId) || isTeacher() || isAdmin();
+      allow create: if isUser(userId);
+      
+      // Segurança Crítica: Usuário não pode mudar seu próprio Role (ex: virar admin)
+      allow update: if isUser(userId) && notUpdating('role'); 
+
+      match /quiz_results/{quizId} { 
+        allow read: if isUser(userId);
+        // Aluno cria o resultado, mas não pode definir o score final (calculado pelo servidor/professor se houver lógica backend)
+        allow create: if isUser(userId) && !('score' in request.resource.data);
+        allow update: if isTeacher() || isAdmin(); 
+      }
+      
+      match /modulesProgress/{moduleId} { allow read, write: if isUser(userId); }
+      match /read_notifications/{notifId} { allow read, write: if isUser(userId); }
+    }
+
+    // =================================================================================
+    // 🏆 GAMIFICATION
+    // =================================================================================
+
+    match /userAchievements/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isTeacher() || isAdmin();
+      // Permite update do próprio usuário SE respeitar as regras anti-cheat de XP
+      allow update: if isUser(userId) && isValidXpIncrement();
+      allow create: if isUser(userId) && request.resource.data.xp == 0;
+    }
+
+    match /achievements/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // =================================================================================
+    // 🏫 TURMAS
+    // =================================================================================
+
+    match /classes/{classId} {
+      allow read: if isAuthenticated();
+      allow create: if isTeacher() || isAdmin();
+      allow update: if isTeacher() || isAdmin() || 
+                    (isAuthenticated() && notUpdating('name') && notUpdating('teacherId') && notUpdating('code'));
+      allow delete: if isTeacher() || isAdmin();
+    }
+
+    // =================================================================================
+    // 📚 CONTEÚDO
+    // =================================================================================
+
+    match /modules/{moduleId} {
+      allow read: if isAuthenticated();
+      allow write: if isTeacher() || isAdmin();
+    }
+    match /module_contents/{moduleId} {
+      allow read: if isAuthenticated();
+      allow write: if isTeacher() || isAdmin();
+    }
+    
+    match /quizzes/{quizId} {
+      allow read: if isAuthenticated();
+      allow write: if isTeacher() || isAdmin();
+      match /answers/{docId} {
+        allow read, write: if isTeacher() || isAdmin();
+      }
+    }
+
+    // =================================================================================
+    // 📝 ATIVIDADES E SUBMISSÕES (INTEGRIDADE ACADÊMICA)
+    // =================================================================================
+
+    match /activities/{activityId} {
+      allow read: if isAuthenticated();
+      allow create: if isTeacher();
+      allow update: if isTeacher() || 
+                    (isAuthenticated() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['submissionCount', 'pendingSubmissionCount']));
+      allow delete: if isTeacher();
+
+      match /submissions/{submissionId} {
+        // Aluno só lê a sua. Professor lê todas.
+        allow read: if resource.data.studentId == request.auth.uid || isTeacher();
+        
+        // CRIAÇÃO:
+        // 1. Deve ser o próprio aluno.
+        // 2. Status inicial deve ser 'Aguardando correção'.
+        // 3. NÃO PODE definir nota ou feedback na criação.
+        allow create: if isUser(request.resource.data.studentId) 
+                      && request.resource.data.status == 'Aguardando correção'
+                      && !('grade' in request.resource.data)
+                      && !('feedback' in request.resource.data);
+        
+        // ATUALIZAÇÃO (Onde a mágica acontece):
+        // 1. Professor pode tudo.
+        // 2. Aluno pode atualizar o CONTEÚDO apenas se ainda NÃO foi corrigido.
+        // 3. Aluno JAMAIS pode alterar nota, feedback ou status para 'Corrigido'.
+        allow update: if isTeacher() || 
+                      (isUser(resource.data.studentId) 
+                       && resource.data.status != 'Corrigido'
+                       && notUpdating('grade')
+                       && notUpdating('feedback')
+                       && notUpdating('status'));
+      }
+    }
+
+    // =================================================================================
+    // ⚙️ SISTEMA
+    // =================================================================================
+    
+    match /student_grades/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isTeacher() || isAdmin();
+    }
+    
+    match /notifications/{id} {
+      allow read: if isUser(resource.data.userId);
+      allow create: if isAuthenticated();
+      allow update: if isUser(resource.data.userId);
+    }
+    
+    match /broadcasts/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isTeacher();
+    }
+    
+    match /invitations/{id} {
+      allow read: if isUser(resource.data.inviteeId) || isUser(resource.data.inviterId);
+      allow write: if isTeacher() || isUser(resource.data.inviteeId);
+    }
+
+    match /teacher_history/{userId} {
+      allow read, write: if isUser(userId);
+    }
+
+    match /attendance_sessions/{sessionId} {
+      allow read: if isAuthenticated();
+      allow write: if isTeacher();
+      match /records/{recordId} {
+        allow read: if isAuthenticated();
+        allow write: if isTeacher();
+      }
+    }
+    
+    match /system_settings/{docId} {
+        allow read: if true; 
+        allow write: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

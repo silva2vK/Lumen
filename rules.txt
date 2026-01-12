@@ -1,0 +1,174 @@
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =================================================================================
+    // 🛡️ SECURITY KERNEL
+    // =================================================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isUser(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    // Helper seguro para obter dados do usuário sem quebrar a avaliação se o doc não existir
+    function getUserRole() {
+      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid));
+      // Verifica se o documento existe e tem o campo role
+      return (userDoc != null && userDoc.data != null && 'role' in userDoc.data) 
+             ? userDoc.data.role 
+             : null;
+    }
+
+    function isTeacher() {
+      return isAuthenticated() && getUserRole() == 'professor';
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && getUserRole() == 'admin';
+    }
+
+    function isValidString(text, min, max) {
+      return text is string && text.size() >= min && text.size() <= max;
+    }
+
+    function isNumber(val) {
+      return val is int || val is float;
+    }
+    
+    // Verifica se campos sensíveis NÃO estão sendo alterados
+    function notUpdating(field) {
+      return !(field in request.resource.data) || resource.data[field] == request.resource.data[field];
+    }
+
+    // =================================================================================
+    // 👤 USUÁRIOS
+    // =================================================================================
+
+    match /users/{userId} {
+      // Permite leitura pública autenticada (necessário para getUserRole funcionar em queries de outros)
+      // Ou restrinja a: isUser(userId) se quiser privacidade total, mas isso quebra isTeacher() se a regra depender de ler o doc do request.auth.uid
+      allow read: if isAuthenticated(); 
+      
+      allow create: if isUser(userId)
+        && isValidString(request.resource.data.name, 1, 100);
+
+      allow update: if isUser(userId) 
+        && notUpdating('role'); // Não pode mudar seu próprio papel via client
+
+      match /quiz_results/{quizId} { allow read, write: if isUser(userId); }
+      match /modulesProgress/{moduleId} { allow read, write: if isUser(userId); }
+      match /read_notifications/{notifId} { allow read, write: if isUser(userId); }
+    }
+
+    // =================================================================================
+    // 🏫 TURMAS
+    // =================================================================================
+
+    match /classes/{classId} {
+      allow read: if isAuthenticated();
+      
+      allow create: if isTeacher() || isAdmin();
+      
+      allow update: if isTeacher() || isAdmin() || 
+                    // Alunos entrando/saindo (atualiza array students)
+                    (isAuthenticated() && notUpdating('name') && notUpdating('teacherId'));
+                    
+      allow delete: if isTeacher() || isAdmin();
+    }
+
+    // =================================================================================
+    // 📚 CONTEÚDO (Módulos, Quizzes, Atividades)
+    // =================================================================================
+
+    match /modules/{moduleId} {
+      allow read: if isAuthenticated();
+      allow write: if isTeacher() || isAdmin();
+    }
+    match /module_contents/{moduleId} {
+      allow read: if isAuthenticated();
+      allow write: if isTeacher() || isAdmin();
+    }
+    match /quizzes/{quizId} {
+      allow read: if isAuthenticated();
+      allow write: if isTeacher() || isAdmin();
+    }
+
+    // ATIVIDADES E SUBMISSÕES
+    match /activities/{activityId} {
+      allow read: if isAuthenticated();
+      allow create: if isTeacher();
+      
+      // Permitir atualização de contadores pelos alunos
+      allow update: if isTeacher() || 
+                    (isAuthenticated() && notUpdating('title') && notUpdating('description') && notUpdating('points'));
+      
+      allow delete: if isTeacher();
+
+      // SUBMISSÕES (Critical Path)
+      match /submissions/{submissionId} {
+        // Regra específica para Collection Group Query (deve casar com o filtro da query)
+        allow read: if resource.data.studentId == request.auth.uid;
+        allow read: if isTeacher();
+
+        allow create: if isUser(request.resource.data.studentId) || isTeacher();
+        allow update: if isUser(resource.data.studentId) || isTeacher();
+      }
+    }
+
+    // =================================================================================
+    // 🏆 GAMIFICATION & SISTEMA
+    // =================================================================================
+
+    match /achievements/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    match /userAchievements/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isUser(userId); 
+    }
+    match /student_grades/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isTeacher() || isUser(resource.data.studentId); // User update logic removed in code but safe to allow owner read
+    }
+    
+    match /notifications/{id} {
+      allow read: if isUser(resource.data.userId);
+      allow create: if isAuthenticated(); // Sistema ou Trigger cria
+      allow update: if isUser(resource.data.userId); // Marcar como lida
+    }
+    
+    match /broadcasts/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isTeacher();
+    }
+    
+    match /invitations/{id} {
+      allow read: if isUser(resource.data.inviteeId) || isUser(resource.data.inviterId);
+      allow write: if isTeacher() || isUser(resource.data.inviteeId);
+    }
+
+    match /teacher_history/{userId} {
+      allow read, write: if isUser(userId);
+    }
+
+    match /attendance_sessions/{sessionId} {
+      allow read: if isAuthenticated();
+      allow write: if isTeacher();
+      
+      match /records/{recordId} {
+        allow read: if isAuthenticated();
+        allow write: if isTeacher();
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

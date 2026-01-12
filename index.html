@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0f172a" />
+    <meta name="description" content="Plataforma de ensino inclusiva e acessível para todos. Estude offline, acompanhe seu progresso e realize atividades escolares.">
+    
+    <!-- PWA & iOS Meta Tags -->
+    <meta name="application-name" content="Lumen">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Lumen">
+    <meta name="format-detection" content="telephone=no">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/png" href="https://i.imgur.com/XISQWUh.png" />
+    <link rel="apple-touch-icon" href="https://i.imgur.com/XISQWUh.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-192.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="/icons/icon-192.png">
+    
+    <title>Lumen Education</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Carrega APENAS a fonte padrão (Open Sans), Space Grotesk (Admin/UI) e VT323 (Retro) para performance inicial -->
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Space+Grotesk:wght@300..700&family=VT323&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CDN restored for immediate preview stability -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Open Sans', 'sans-serif'],
+              scifi: ['Orbitron', 'sans-serif'],
+              epic: ['Cinzel', 'serif'],
+              gothic: ['Cinzel Decorative', 'serif'],
+              japanese: ['Sawarabi Mincho', 'serif'],
+              modern: ['Space Grotesk', 'sans-serif'],
+              retro: ['VT323', 'monospace'],
+              // New Families
+              typewriter: ['Special Elite', 'monospace'],
+              code: ['Fira Code', 'monospace'],
+              cute: ['Fredoka', 'sans-serif'],
+              executive: ['Outfit', 'sans-serif'],
+              inter: ['Inter', 'sans-serif'],
+            },
+            colors: {
+              slate: {
+                850: '#151e32',
+              },
+              brand: 'rgb(var(--brand-rgb) / <alpha-value>)',
+            },
+            animation: {
+              'fade-in': 'fadeIn 0.5s ease-out forwards',
+              'slide-in': 'slideIn 0.3s ease-out forwards',
+            },
+            keyframes: {
+              fadeIn: {
+                '0%': { opacity: '0' },
+                '100%': { opacity: '1' },
+              },
+              slideIn: {
+                '0%': { transform: 'translateY(10px)', opacity: '0' },
+                '100%': { transform: 'translateY(0)', opacity: '1' },
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+        /* Custom Scrollbar for Webkit */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+        
+        /* Utility for hiding scrollbar but keeping functionality */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Prevent Pull-to-Refresh */
+        body {
+            overscroll-behavior-y: none;
+        }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@19.2.3",
+    "react/": "https://esm.sh/react@19.2.3/",
+    "react-dom": "https://esm.sh/react-dom@19.2.3?deps=react@19.2.3",
+    "react-dom/client": "https://esm.sh/react-dom@19.2.3/client?deps=react@19.2.3",
+    "react-router-dom": "https://esm.sh/react-router-dom@7.10.1?deps=react@19.2.3,react-dom@19.2.3",
+    "@tanstack/react-query": "https://esm.sh/@tanstack/react-query@5.90.12?deps=react@19.2.3",
+    "@tanstack/react-query-persist-client": "https://esm.sh/@tanstack/react-query-persist-client@5.90.14?deps=react@19.2.3,@tanstack/react-query@5.90.12",
+    "@tanstack/react-virtual": "https://esm.sh/@tanstack/react-virtual@3.13.2?deps=react@19.2.3,react-dom@19.2.3",
+    "firebase/": "https://esm.sh/firebase@12.7.0/",
+    "@headlessui/react": "https://esm.sh/@headlessui/react@2.2.9?deps=react@19.2.3,react-dom@19.2.3",
+    "vite": "https://esm.sh/vite@7.3.0",
+    "@vitejs/plugin-react-swc": "https://esm.sh/@vitejs/plugin-react-swc@4.2.2",
+    "vite-plugin-pwa": "https://esm.sh/vite-plugin-pwa@1.2.0",
+    "idb-keyval": "https://esm.sh/idb-keyval@6.2.2",
+    "browser-image-compression": "https://esm.sh/browser-image-compression@2.0.2",
+    "@google/genai": "https://esm.sh/@google/genai@1.34.0",
+    "recharts": "https://esm.sh/recharts@3.6.0?deps=react@19.2.3,react-dom@19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.90.1"
+  }
+}
+</script>
+</head>
+<body class="bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-200">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html>

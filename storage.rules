@@ -1,0 +1,76 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // =================================================================================
+    // 🛡️ KERNEL DE SEGURANÇA (STORAGE)
+    // =================================================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isUser(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    // =================================================================================
+    // 👤 PERFIS (Avatars)
+    // =================================================================================
+    
+    // Permite que o usuário faça upload apenas na sua própria pasta de avatar
+    // Caminho: avatars/users/{userId} ou avatars/admin/{userId}
+    match /avatars/{role}/{userId}/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if isUser(userId);
+    }
+
+    // =================================================================================
+    // 🏫 PROFESSOR (Conteúdo & Turmas)
+    // =================================================================================
+
+    // Capas de Turmas
+    match /class_covers/{userId}/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if isUser(userId);
+    }
+
+    // Capas de Módulos
+    match /module_covers/{userId}/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if isUser(userId);
+    }
+
+    // Imagens internas de Módulos (Editor de Conteúdo)
+    match /module_content_images/{userId}/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if isUser(userId);
+    }
+
+    // Anexos de Atividades (PDFs, Imagens auxiliares para download)
+    // Caminho usado: activity_attachments/{classId}/{userId}/{fileName}
+    // Obs: Como o folderId pode ser 'drafts' ou um ID de turma, usamos wildcards
+    match /activity_attachments/{folderId}/{userId}/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if isUser(userId);
+    }
+    
+    // Assets para Atividades Interativas (Imagens de fundo para Hotspots, etc)
+    match /activity_assets/{userId}/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if isUser(userId);
+    }
+
+    // =================================================================================
+    // 🎓 ALUNO (Submissões)
+    // =================================================================================
+
+    // Envios de arquivos em respostas de atividades
+    match /student_submissions/{activityId}/{studentId}/{allPaths=**} {
+      // Leitura permitida para autenticados (Professor precisa baixar para corrigir)
+      allow read: if isAuthenticated();
+      // Escrita apenas pelo próprio aluno
+      allow write: if isUser(studentId);
+    }
+  }
+}

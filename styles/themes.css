@@ -1,0 +1,407 @@
+
+:root {
+    --root-font-size: 16px;
+    
+    /* Default Brand Color - Space separated for Tailwind */
+    --brand-color: #4ade80; 
+    --brand-rgb: 74 222 128;
+    
+    /* Default Atmosphere (Standard) */
+    --bg-main: #09090b; 
+    --bg-main-rgb: 9 9 11;
+    --bg-gradient-start: #0f172a;
+    --bg-gradient-end: #09090b;
+    
+    /* Default Glass (Dark Tint) */
+    --glass-bg: rgba(24, 24, 27, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.08);
+}
+
+/* --- PERFORMANCE UTILITIES --- */
+
+/* Otimiza a renderização de texto */
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+/* Reduz carga de GPU em dispositivos que preferem performance */
+@media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    
+    .glass-panel, .glass-sidebar, .glass-modal, .card-surface {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background: var(--bg-main) !important; /* Fallback sólido */
+        border: 1px solid rgba(255,255,255,0.1);
+        box-shadow: none !important;
+        background-image: none !important;
+    }
+}
+
+/* Classe utilitária para forçar aceleração de hardware apenas onde necessário */
+.gpu-accelerated {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    will-change: transform, opacity;
+}
+
+/* --- HIGH-END UI UTILITIES --- */
+
+/* Textura de Ruído (Noise) */
+.bg-noise {
+    background-image: url("https://grainy-gradients.vercel.app/noise.svg");
+    background-repeat: repeat;
+    opacity: 0.05;
+    pointer-events: none;
+}
+
+/* Card Surface: Substitui o Glassmorphism genérico por algo mais tátil */
+.card-surface {
+    position: relative;
+    background-color: var(--glass-bg);
+    background-image: linear-gradient(to bottom right, rgba(255,255,255,0.03), transparent);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+/* Efeito de textura sutil sobre o card */
+.card-surface::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("https://grainy-gradients.vercel.app/noise.svg");
+    opacity: 0.04;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Hover: Glow na borda e leve elevação */
+.card-surface:hover {
+    border-color: rgba(var(--brand-rgb), 0.4);
+    box-shadow: 0 0 25px -5px rgba(var(--brand-rgb), 0.15), 0 10px 20px -5px rgba(0, 0, 0, 0.4);
+    transform: translateY(-2px);
+}
+
+/* Tech Input: Estilo de terminal de dados */
+.input-tech {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: #e2e8f0;
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(4px);
+}
+
+.input-tech:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.input-tech:focus {
+    background: rgba(0, 0, 0, 0.6);
+    border-color: var(--brand-color);
+    box-shadow: 0 0 0 1px var(--brand-color), 0 0 15px -3px rgba(var(--brand-rgb), 0.3);
+    outline: none;
+}
+
+.input-tech::placeholder {
+    color: rgba(255, 255, 255, 0.25);
+    font-style: italic;
+}
+
+/* --- FONT PROFILES --- */
+.font-gothic, .font-gothic * { font-family: 'Cinzel Decorative', serif !important; }
+.font-confidential, .font-confidential * { font-family: 'Special Elite', monospace !important; }
+.font-code, .font-code * { font-family: 'Fira Code', monospace !important; }
+.font-cute, .font-cute * { font-family: 'Fredoka', sans-serif !important; }
+.font-executive, .font-executive * { font-family: 'Outfit', sans-serif !important; }
+
+/* --- ACCESSIBILITY: HIGH CONTRAST TEXT OVERRIDE --- */
+html.high-contrast-text body {
+    font-weight: 600 !important;
+}
+
+html.high-contrast-text * {
+    text-shadow: none !important;
+}
+
+html.high-contrast-text.dark .text-slate-400,
+html.high-contrast-text.dark .text-slate-500,
+html.high-contrast-text.dark .text-slate-600,
+html.high-contrast-text.dark .text-gray-400,
+html.high-contrast-text.dark .text-gray-500 {
+    color: #ffffff !important;
+    opacity: 1 !important;
+}
+
+html.high-contrast-text.dark .border-white\/10,
+html.high-contrast-text.dark .border-white\/5 {
+    border-color: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* High Contrast: Reset sidebar borders */
+html.high-contrast-text .glass-sidebar {
+    background: rgba(0, 0, 0, 0.95) !important;
+    border: none !important;
+    border-right: 1px solid #ffffff !important;
+}
+
+html.high-contrast-text .glass-panel,
+html.high-contrast-text .card-surface {
+    background: rgba(0, 0, 0, 0.95) !important;
+    border: 1px solid #ffffff !important;
+}
+
+/* --- ATMOSPHERES --- */
+
+/* Standard Theme Sidebar Override (AMOLED + Accent) */
+html.standard .glass-sidebar {
+    background: #000000 !important;
+    border-right: 1px solid rgb(var(--brand-rgb) / 0.2) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: 10px 0 40px -10px rgba(0, 0, 0, 0.8) !important;
+}
+
+html.standard .glass-sidebar > div:first-child { /* Logo/Header area */
+    border-bottom-color: rgb(var(--brand-rgb) / 0.1) !important;
+}
+
+html.standard .glass-sidebar nav .border-t { /* Separators */
+    border-top-color: rgb(var(--brand-rgb) / 0.1) !important;
+}
+
+html.oled {
+    --bg-main: #000000;
+    --bg-main-rgb: 0 0 0;
+    --bg-gradient-start: #000000;
+    --bg-gradient-end: #000000;
+    --glass-bg: rgba(0, 0, 0, 0.85);
+    --glass-border: rgba(50, 50, 50, 0.3);
+}
+
+html.nebula {
+    --bg-main: #020617;
+    --bg-main-rgb: 2 6 23;
+    --bg-gradient-start: #0f172a;
+    --bg-gradient-end: #1e1b4b;
+    --glass-bg: rgba(15, 23, 42, 0.7);
+    --glass-border: rgba(99, 102, 241, 0.15);
+}
+
+html.dracula {
+    --bg-main: #282a36;
+    --bg-main-rgb: 40 42 54;
+    --bg-gradient-start: #282a36;
+    --bg-gradient-end: #44475a;
+    --glass-bg: rgba(40, 42, 54, 0.8);
+    --glass-border: rgba(189, 147, 249, 0.1);
+}
+
+html.paper {
+    --bg-main: #1c1917;
+    --bg-main-rgb: 28 25 23;
+    --bg-gradient-start: #1c1917;
+    --bg-gradient-end: #292524;
+    --glass-bg: rgba(28, 25, 23, 0.85);
+    --glass-border: rgba(214, 211, 209, 0.1);
+}
+
+html.high-contrast {
+    --bg-main: #000000;
+    --bg-main-rgb: 0 0 0;
+    --brand-color: #ffff00;
+    --brand-rgb: 255 255 0;
+    --bg-gradient-start: #000000;
+    --bg-gradient-end: #000000;
+    --glass-bg: #000000;
+    --glass-border: #ffff00;
+}
+
+html.synthwave {
+    --bg-main: #2e022d;
+    --bg-main-rgb: 46 2 45;
+    --brand-color: #d946ef;
+    --brand-rgb: 217 70 239;
+    --bg-gradient-start: #4a044e;
+    --bg-gradient-end: #1a0b2e;
+    --glass-bg: rgba(60, 20, 60, 0.7);
+    --glass-border: rgba(217, 70, 239, 0.3);
+}
+
+html.eva {
+    --bg-main: #1e1b4b;
+    --bg-main-rgb: 30 27 75;
+    --brand-color: #a3e635;
+    --brand-rgb: 163 230 53;
+    --bg-gradient-start: #2e1065;
+    --bg-gradient-end: #1e1b4b;
+    --glass-bg: rgba(40, 20, 80, 0.8);
+    --glass-border: rgba(163, 230, 53, 0.3);
+}
+
+html.restless-dreams {
+    --bg-main: #0c0a09; 
+    --bg-main-rgb: 12 10 9;
+    --brand-color: #8a1c1c;
+    --brand-rgb: 138 28 28;
+    --bg-gradient-start: #1c1917;
+    --bg-gradient-end: #0a0a08;
+    --glass-bg: rgba(20, 20, 18, 0.9); 
+    --glass-border: rgba(120, 113, 108, 0.2);
+}
+
+html.restless-dreams body {
+    position: relative;
+    font-family: 'Special Elite', monospace !important;
+}
+
+html.restless-dreams body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-image: url("https://grainy-gradients.vercel.app/noise.svg");
+    opacity: 0.08;
+    pointer-events: none;
+    z-index: 9998;
+    mix-blend-mode: overlay;
+    animation: static-shift 2s infinite steps(4);
+}
+
+html.restless-dreams body::after {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: radial-gradient(circle, transparent 40%, rgba(0, 0, 0, 0.7) 100%);
+    pointer-events: none;
+    z-index: 9999;
+}
+
+/* Restless Dreams: Sidebar correction */
+html.restless-dreams .glass-sidebar {
+    border: none;
+    border-right: 1px solid #44403c;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+    background: rgba(15, 14, 13, 0.95);
+}
+
+html.restless-dreams .glass-panel,
+html.restless-dreams .card-surface {
+    border: 1px solid #44403c;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+    background: rgba(15, 14, 13, 0.95);
+}
+
+html.restless-dreams input,
+html.restless-dreams textarea,
+html.restless-dreams select {
+    background-color: #000000 !important;
+    border: 1px solid #292524 !important;
+    color: #d6d3d1 !important;
+}
+
+html.restless-dreams button {
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+/* --- THEME: SHADOW MONARCH (Solo Leveling) --- */
+html.shadow-monarch {
+    --bg-main: #050510; /* Dark Navy/Black Abyss */
+    --bg-main-rgb: 5 5 16;
+    /* Electric Blue from the System Windows */
+    --brand-color: #00a8ff; 
+    --brand-rgb: 0 168 255;
+    
+    --bg-gradient-start: #02020a;
+    --bg-gradient-end: #0a0a1a;
+    
+    /* System Window Look */
+    --glass-bg: rgba(2, 6, 23, 0.85);
+    --glass-border: rgba(0, 168, 255, 0.3); /* Blue glowing border */
+}
+
+/* Solo Leveling: Specific UI Overrides */
+html.shadow-monarch body {
+    font-family: 'Orbitron', sans-serif !important; /* System Font */
+}
+
+/* Shadow Monarch: Sidebar correction */
+html.shadow-monarch .glass-sidebar {
+    border: none;
+    border-right: 1px solid var(--brand-color);
+    box-shadow: 0 0 15px rgba(0, 168, 255, 0.15), inset 0 0 20px rgba(0, 168, 255, 0.05);
+    background: rgba(5, 5, 15, 0.9);
+}
+
+html.shadow-monarch .glass-panel,
+html.shadow-monarch .card-surface {
+    border: 1px solid var(--brand-color);
+    box-shadow: 0 0 15px rgba(0, 168, 255, 0.15), inset 0 0 20px rgba(0, 168, 255, 0.05);
+    background: rgba(5, 5, 15, 0.9);
+}
+
+/* Purple Accents for "Shadows" (Igris/Beru vibe) */
+html.shadow-monarch h1, 
+html.shadow-monarch h2,
+html.shadow-monarch strong {
+    text-shadow: 0 0 10px rgba(0, 168, 255, 0.5);
+}
+
+html.shadow-monarch button {
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+@keyframes static-shift {
+    0% { transform: translate(0, 0); }
+    25% { transform: translate(-2px, 2px); }
+    50% { transform: translate(2px, -2px); }
+    75% { transform: translate(-2px, -2px); }
+    100% { transform: translate(0, 0); }
+}
+
+/* --- GLOBAL TRANSITIONS --- */
+body {
+    background-color: var(--bg-main);
+    color: #f1f5f9;
+    transition: background-color 0.5s ease, color 0.3s ease;
+}
+
+.glass-panel {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: background 0.5s ease, border-color 0.5s ease;
+    /* Performance hint */
+    will-change: transform, opacity;
+}
+
+.glass-sidebar {
+    background: var(--glass-bg); 
+    border-right: 1px solid var(--glass-border);
+    border-top: none;
+    border-bottom: none;
+    border-left: none;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    transition: background 0.5s ease, border-color 0.5s ease;
+}
